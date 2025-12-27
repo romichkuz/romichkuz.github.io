@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Яндекс Go</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background: #f5f5f7;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .app-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Шапка Яндекс Go */
+        .header {
+            background: linear-gradient(135deg, #FFCC00 0%, #FFD633 100%);
+            color: #000;
+            padding: 18px 20px 14px;
+            position: relative;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .logo {
+            font-weight: 800;
+            font-size: 22px;
+            color: #000;
+        }
+        
+        .balance {
+            font-weight: 600;
+            font-size: 15px;
+            color: #000;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+        }
+        
+        /* Статус бар */
+        .status-bar {
+            background: white;
+            padding: 14px 20px;
+            border-bottom: 1px solid #e6e6e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #FFCC00;
+        }
+        
+        .status-dot.active {
+            background: #00CC66;
+        }
+        
+        .status-dot.pending {
+            background: #FFCC00;
+            animation: pulse-dot 1.5s infinite;
+        }
+        
+        .status-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        @keyframes pulse-dot {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        /* Основные экраны */
+        .screen {
+            display: none;
+            padding-bottom: 90px;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        /* Экран заказа такси */
+        .order-screen {
+            padding: 0;
+        }
+        
+        .address-inputs {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e6e6e6;
+        }
+        
+        .address-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: #f5f5f7;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .address-input:last-child {
+            margin-bottom: 0;
+        }
+        
+        .address-icon {
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .address-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .address-placeholder {
+            color: #999;
+        }
+        
+        .address-value {
+            color: #000;
+            font-weight: 500;
+        }
+        
+        .address-change {
+            color: #FFCC00;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        /* Карта на главном экране */
+        .map-container-large {
+            height: 250px;
+            background: #e8eaf6;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .static-map {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            position: relative;
+        }
+        
+        .map-pin {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #FFCC00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 3px solid white;
+        }
+        
+        .spot-pin {
+            position: absolute;
+            top: 60%;
+            left: 70%;
+            width: 30px;
+            height: 30px;
+            background: #00CC66;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 3px solid white;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+        }
+        
+        .map-overlay-icon {
+            width: 40px;
+            height: 40px;
+            background: #FFCC00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 18px;
+        }
+        
+        .map-overlay-text {
+            flex: 1;
+        }
+        
+        .map-overlay-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #000;
+            margin-bottom: 4px;
+        }
+        
+        .map-overlay-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Тарифы */
+        .tariffs {
+            padding: 20px;
+        }
+        
+        .tariffs-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 16px;
+        }
+        
+        .tariff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .tariff-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border: 2px solid #e6e6e6;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tariff-item:hover {
+            border-color: #FFCC00;
+            background: #FFF9E6;
+        }
+        
+        .tariff-item.active {
+            border-color: #FFCC00;
+            background: #FFF9E6;
+        }
+        
+        .tariff-info {
+            flex: 1;
+        }
+        
+        .tariff-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #000;
+            margin-bottom: 4px;
+        }
+        
+        .tariff-description {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .tariff-price {
+            font-weight: 700;
+            font-size: 18px;
+            color: #000;
+        }
+        
+        /* Кнопка заказа */
+        .order-button-container {
+            padding: 20px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-top: 1px solid #e6e6e6;
+        }
+        
+        .order-button {
+            background: #FFCC00;
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            padding: 18px 24px;
+            font-size: 17px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        
+        .order-button:hover {
+            background: #FFD633;
+            transform: translateY(-2px);
+        }
+        
+        /* Экран подтверждения заказа */
+        .confirmation-screen {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .confirmation-icon {
+            width: 80px;
+            height: 80px;
+            background: #00CC66;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto 24px;
+            color: white;
+            font-size: 40px;
+        }
+        
+        .confirmation-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 12px;
+        }
+        
+        .confirmation-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        
+        .confirmation-details {
+            background: #FFF9E6;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        
+        .confirmation-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #FFE680;
+        }
+        
+        .confirmation-detail:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .confirmation-label {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .confirmation-value {
+            color: #000;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .confirmation-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 30px;
+        }
+        
+        /* Экран навигации - с картой */
+        .nav-screen {
+            padding-bottom: 90px;
+        }
+        
+        .nav-map-container {
+            height: 200px;
+            background: #e8eaf6;
+            margin: 0 20px 24px;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-map {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        /* Карты для каждого этапа навигации */
+        .step-map {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 16px;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .step-map-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            color: #FFCC00;
+        }
+        
+        .step-map-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .step-map-subtitle {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        /* Остальные стили для навигации */
+        .spot-confirmation {
+            background: #E6F7ED;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 0 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #00CC66;
+        }
+        
+        .spot-confirmation-icon {
+            color: #00CC66;
+            font-size: 24px;
+        }
+        
+        .spot-confirmation-text strong {
+            color: #000;
+            font-weight: 700;
+        }
+        
+        .spot-confirmation-text {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        /* Прогресс шагов */
+        .steps-progress {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .steps-progress::before {
+            content: '';
+            position: absolute;
+            top: 36px;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: #e6e6e6;
+            z-index: 1;
+        }
+        
+        .step-progress-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-progress-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e6e6e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #999;
+            margin-bottom: 8px;
+            border: 3px solid white;
+        }
+        
+        .step-progress-circle.active {
+            background: #FFCC00;
+            color: #000;
+        }
+        
+        .step-progress-circle.completed {
+            background: #00CC66;
+            color: white;
+        }
+        
+        .step-progress-label {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            max-width: 80px;
+            font-weight: 500;
+        }
+        
+        .step-progress-label.active {
+            color: #000;
+            font-weight: 700;
+        }
+        
+        .step-progress-label.completed {
+            color: #00CC66;
+        }
+        
+        /* Шаг навигации */
+        .navigation-step {
+            padding: 0 20px;
+            margin-bottom: 24px;
+        }
+        
+        .step-card {
+            background: #FFF9E6;
+            border-radius: 16px;
+            padding: 24px;
+            border: 2px solid #FFCC00;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -12px;
+            left: 24px;
+            background: #FFCC00;
+            color: #000;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .step-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .step-instruction {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .step-instruction .highlight {
+            color: #000;
+            font-weight: 700;
+            background: #FFF1B8;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .step-instruction .spot-ref {
+            color: #000;
+            font-weight: 800;
+            background: #FFCC00;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .step-details {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #FFE680;
+        }
+        
+        .step-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .step-detail.highlight {
+            color: #00CC66;
+            font-weight: 600;
+        }
+        
+        .confirm-button {
+            background: #00CC66;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 18px 24px;
+            font-size: 17px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0, 204, 102, 0.2);
+        }
+        
+        .confirm-button:hover {
+            background: #00B359;
+            transform: translateY(-2px);
+        }
+        
+        /* Кнопки действий в навигации */
+        .nav-action-buttons {
+            padding: 20px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-top: 1px solid #e6e6e6;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .primary-button {
+            background: #FFCC00;
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            padding: 18px 24px;
+            font-size: 17px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        
+        .primary-button:hover {
+            background: #FFD633;
+            transform: translateY(-2px);
+        }
+        
+        .secondary-button {
+            background: white;
+            color: #000;
+            border: 2px solid #e6e6e6;
+            border-radius: 14px;
+            padding: 18px 24px;
+            font-size: 17px;
+            font-weight: 500;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        
+        .secondary-button:hover {
+            background: #f9f9f9;
+            border-color: #FFCC00;
+        }
+        
+        /* Анимации */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* AR Экран - исправленный */
+        .ar-screen {
+            background: #000;
+            height: calc(100vh - 140px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ar-camera-view {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .ar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.1) 100%);
+            z-index: 10;
+        }
+        
+        .ar-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-top: 10px;
+        }
+        
+        .ar-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ar-close {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ar-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .ar-target {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .ar-arrow {
+            color: #00CC66;
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+            filter: drop-shadow(0 0 10px rgba(0, 204, 102, 0.7));
+        }
+        
+        .ar-distance {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .ar-instruction {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            max-width: 300px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 40px;
+        }
+        
+        /* Исправленная AR подсветка машины - теперь точно на машине */
+        .ar-car-highlight {
+            position: absolute;
+            width: 160px;
+            height: 70px;
+            border: 4px solid #00CC66;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 204, 102, 0.8), 0 0 60px rgba(0, 204, 102, 0.4);
+            animation: highlight-pulse 3s infinite;
+            z-index: 5;
+            pointer-events: none;
+            top: 62%;
+            left: 62%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .ar-spot-info {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: auto;
+            border: 2px solid #00CC66;
+            backdrop-filter: blur(10px);
+        }
+        
+        .ar-spot-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ar-spot-details {
+            display: flex;
+            justify-content: space-between;
+            color: #ddd;
+            font-size: 14px;
+        }
+        
+        .ar-spot-detail {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .ar-spot-detail i {
+            color: #00CC66;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translateY(0); opacity: 1; }
+            50% { transform: translateY(-10px); opacity: 0.8; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes highlight-pulse {
+            0% { 
+                box-shadow: 0 0 30px rgba(0, 204, 102, 0.8), 0 0 60px rgba(0, 204, 102, 0.4);
+                border-color: #00CC66;
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(0, 204, 102, 1), 0 0 80px rgba(0, 204, 102, 0.6);
+                border-color: #00FF88;
+            }
+            100% { 
+                box-shadow: 0 0 30px rgba(0, 204, 102, 0.8), 0 0 60px rgba(0, 204, 102, 0.4);
+                border-color: #00CC66;
+            }
+        }
+        
+        /* Экран заказа активного */
+        .active-order-screen {
+            padding-bottom: 90px;
+        }
+        
+        .order-status-card {
+            background: #FFF9E6;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px;
+            border: 2px solid #FFCC00;
+        }
+        
+        .order-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .order-status-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+        }
+        
+        .order-status-time {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+            background: #FFE680;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        
+        .order-status-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .order-status-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .order-status-icon {
+            color: #666;
+            font-size: 16px;
+            width: 20px;
+        }
+        
+        .order-status-text {
+            color: #333;
+            font-size: 15px;
+        }
+        
+        .order-status-text.highlight {
+            color: #000;
+            font-weight: 600;
+        }
+        
+        /* Экран завершения навигации */
+        .completion-screen {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .completion-icon {
+            width: 100px;
+            height: 100px;
+            background: #00CC66;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 40px auto 30px;
+            color: white;
+            font-size: 50px;
+            animation: scale-in 0.5s ease-out;
+        }
+        
+        @keyframes scale-in {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .completion-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #00CC66;
+            margin-bottom: 16px;
+        }
+        
+        .completion-subtitle {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 40px;
+            line-height: 1.5;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .completion-details {
+            background: #FFF9E6;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            text-align: left;
+            border: 2px solid #FFCC00;
+        }
+        
+        .completion-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #FFE680;
+        }
+        
+        .completion-detail-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .completion-detail-icon {
+            width: 50px;
+            height: 50px;
+            background: #FFCC00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        
+        .completion-detail-content {
+            flex: 1;
+        }
+        
+        .completion-detail-title {
+            font-weight: 700;
+            font-size: 17px;
+            color: #000;
+            margin-bottom: 4px;
+        }
+        
+        .completion-detail-text {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        
+        .completion-stats {
+            background: #F0F7FF;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 0 20px 30px;
+            text-align: center;
+            border: 2px solid #3d5afe;
+        }
+        
+        .completion-stats-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #3d5afe;
+            margin-bottom: 12px;
+        }
+        
+        .completion-stats-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #3d5afe;
+            margin-bottom: 8px;
+        }
+        
+        .completion-stats-label {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Шапка Яндекс Go -->
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">Go</div>
+                <div class="balance">1 234 ₽</div>
+            </div>
+            <div class="header-title">Заказ такси</div>
+        </div>
+        
+        <!-- Статус бар -->
+        <div class="status-bar">
+            <div class="status">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-text" id="statusText">Выберите тариф</span>
+            </div>
+        </div>
+        
+        <!-- Экран 0: Заказ такси (главный экран) -->
+        <div class="screen order-screen active fade-in" id="screen0">
+            <div class="address-inputs">
+                <div class="address-input">
+                    <div class="address-icon">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                    <div class="address-text">
+                        <div class="address-value">Аэропорт Внуково, терминал А</div>
+                    </div>
+                    <div class="address-change">Изменить</div>
+                </div>
+                
+                <div class="address-input">
+                    <div class="address-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="address-text">
+                        <div class="address-placeholder">Куда едем?</div>
+                    </div>
+                    <div class="address-change">Указать</div>
+                </div>
+            </div>
+            
+            <div class="map-container-large">
+                <div class="static-map">
+                    <i class="fas fa-map-marked-alt" style="font-size: 48px; margin-bottom: 12px; color: #FFCC00;"></i>
+                    <div>Аэропорт Внуково</div>
+                    <div style="font-size: 14px; margin-top: 8px; color: #999;">Терминал А</div>
+                    
+                    <div class="map-pin">
+                        <i class="fas fa-plane"></i>
+                    </div>
+                    
+                    <div class="spot-pin">
+                        15B
+                    </div>
+                </div>
+                
+                <div class="map-overlay">
+                    <div class="map-overlay-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="map-overlay-text">
+                        <div class="map-overlay-title">Встреча у Spot 15B</div>
+                        <div class="map-overlay-subtitle">После заказа активируйте навигацию до машины</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tariffs">
+                <div class="tariffs-title">Выберите тариф</div>
+                <div class="tariff-list">
+                    <div class="tariff-item" data-tariff="economy">
+                        <div class="tariff-info">
+                            <div class="tariff-name">Эконом</div>
+                            <div class="tariff-description">Подойдёт для поездки в одиночку</div>
+                        </div>
+                        <div class="tariff-price">589 ₽</div>
+                    </div>
+                    
+                    <div class="tariff-item active" data-tariff="comfort">
+                        <div class="tariff-info">
+                            <div class="tariff-name">Комфорт</div>
+                            <div class="tariff-description">Просторный седан с кондиционером</div>
+                        </div>
+                        <div class="tariff-price">789 ₽</div>
+                    </div>
+                    
+                    <div class="tariff-item" data-tariff="business">
+                        <div class="tariff-info">
+                            <div class="tariff-name">Бизнес</div>
+                            <div class="tariff-description">Премиальный автомобиль</div>
+                        </div>
+                        <div class="tariff-price">1 189 ₽</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="order-button-container">
+                <button class="order-button" id="orderButton">
+                    <i class="fas fa-car"></i>
+                    Заказать такси за 789 ₽
+                </button>
+            </div>
+        </div>
+        
+        <!-- Экран 1: Подтверждение заказа -->
+        <div class="screen confirmation-screen" id="screen-confirm">
+            <div class="confirmation-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            
+            <div class="confirmation-title">Такси заказано!</div>
+            <div class="confirmation-subtitle">
+                Водитель Алексей подъедет к Spot 15B через 5-7 минут.<br>
+                Вы можете начать навигацию до точки встречи.
+            </div>
+            
+            <div class="confirmation-details">
+                <div class="confirmation-detail">
+                    <span class="confirmation-label">Тариф:</span>
+                    <span class="confirmation-value" id="confirmTariff">Комфорт</span>
+                </div>
+                <div class="confirmation-detail">
+                    <span class="confirmation-label">Стоимость:</span>
+                    <span class="confirmation-value" id="confirmPrice">789 ₽</span>
+                </div>
+                <div class="confirmation-detail">
+                    <span class="confirmation-label">Точка встречи:</span>
+                    <span class="confirmation-value">Spot 15B</span>
+                </div>
+                <div class="confirmation-detail">
+                    <span class="confirmation-label">Машина:</span>
+                    <span class="confirmation-value">Kia Rio (белый, А123БВ)</span>
+                </div>
+            </div>
+            
+            <div class="confirmation-buttons">
+                <button class="primary-button" id="startNavButton">
+                    <i class="fas fa-route"></i>
+                    Начать навигацию до Spot 15B
+                </button>
+                
+                <button class="secondary-button" id="closeConfirmButton">
+                    <i class="fas fa-times"></i>
+                    Закрыть
+                </button>
+            </div>
+        </div>
+        
+        <!-- Экран 2: Главный экран с активным заказом -->
+        <div class="screen active-order-screen" id="screen-active">
+            <div class="order-status-card">
+                <div class="order-status-header">
+                    <div class="order-status-title">Такси едет к вам</div>
+                    <div class="order-status-time">~5 мин</div>
+                </div>
+                
+                <div class="order-status-details">
+                    <div class="order-status-detail">
+                        <div class="order-status-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="order-status-text highlight">Алексей Иванов</div>
+                    </div>
+                    
+                    <div class="order-status-detail">
+                        <div class="order-status-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="order-status-text">Kia Rio • Белый • А123БВ</div>
+                    </div>
+                    
+                    <div class="order-status-detail">
+                        <div class="order-status-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="order-status-text highlight">Точка встречи: Spot 15B</div>
+                    </div>
+                    
+                    <div class="order-status-detail">
+                        <div class="order-status-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="order-status-text">Прибудет через 5-7 минут</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 0 20px 20px;">
+                <button class="primary-button" id="navButtonActive">
+                    <i class="fas fa-route"></i>
+                    Навигация до Spot 15B
+                </button>
+            </div>
+            
+            <div class="order-button-container">
+                <button class="secondary-button" id="cancelOrderButton">
+                    <i class="fas fa-times"></i>
+                    Отменить поездку
+                </button>
+            </div>
+        </div>
+        
+        <!-- Экран 3: Навигация - Шаг 1 (Карта: Багажная лента → Стойка информации) -->
+        <div class="screen nav-screen" id="screen3">
+            <div class="spot-confirmation">
+                <div class="spot-confirmation-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="spot-confirmation-text">
+                    <strong>Spot 15B забронирован для вашей встречи.</strong><br>
+                    Водитель Алексей подтвердил прибытие и ожидает вас.
+                </div>
+            </div>
+            
+            <div class="nav-map-container">
+                <div class="nav-map">
+                    <div class="step-map">
+                        <i class="fas fa-suitcase step-map-icon"></i>
+                        <div class="step-map-title">От багажной ленты</div>
+                        <div class="step-map-subtitle">Поверните направо → 30 метров</div>
+                        <div style="margin-top: 10px; font-size: 12px; color: #999;">Шаг 1 из 4</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="steps-progress">
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Spot назначен</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Водитель подтвердил</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle active" id="step1Circle">1</div>
+                    <div class="step-progress-label active" id="step1Label">К стойке информации</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle" id="step2Circle">2</div>
+                    <div class="step-progress-label" id="step2Label">До Starbucks</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle" id="step3Circle">3</div>
+                    <div class="step-progress-label" id="step3Label">На лифте вниз</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle" id="step4Circle">4</div>
+                    <div class="step-progress-label" id="step4Label">К Spot 15B</div>
+                </div>
+            </div>
+            
+            <div class="navigation-step">
+                <div class="step-card">
+                    <div class="step-number" id="currentStepNumber">1</div>
+                    <div class="step-title">
+                        <i class="fas fa-flag-checkered"></i>
+                        Начало пути к Spot 15B
+                    </div>
+                    <div class="step-instruction" id="currentStepInstruction">
+                        Чтобы дойти до <span class="spot-ref">вашего Spot 15B</span>, от багажной ленты <span class="highlight">поверните направо</span> и идите прямо 30 метров до стойки информации.
+                    </div>
+                    
+                    <div class="step-details">
+                        <div class="step-detail">
+                            <i class="fas fa-walking"></i>
+                            <span id="stepDistance">30 метров</span>
+                        </div>
+                        <div class="step-detail">
+                            <i class="fas fa-clock"></i>
+                            <span id="stepTime">1-2 минуты</span>
+                        </div>
+                        <div class="step-detail highlight">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Spot 15B ждет вас</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="confirm-button" id="confirmStepButton">
+                    <i class="fas fa-check-circle"></i> Я дошёл до стойки информации
+                </button>
+            </div>
+            
+            <div class="nav-action-buttons">
+                <button class="secondary-button" id="backToActiveButton">
+                    <i class="fas fa-arrow-left"></i> Вернуться к заказу
+                </button>
+            </div>
+        </div>
+        
+        <!-- Экран 4: Навигация - Шаг 2 (Карта: Стойка информации → Starbucks) -->
+        <div class="screen nav-screen" id="screen4">
+            <div class="nav-map-container">
+                <div class="nav-map">
+                    <div class="step-map">
+                        <i class="fas fa-info-circle step-map-icon"></i>
+                        <div class="step-map-title">От стойки информации</div>
+                        <div class="step-map-subtitle">Идите прямо → 50 метров → Starbucks справа</div>
+                        <div style="margin-top: 10px; font-size: 12px; color: #999;">Шаг 2 из 4</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="steps-progress">
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Spot назначен</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Водитель подтвердил</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">К стойке информации</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle active">2</div>
+                    <div class="step-progress-label active">До Starbucks</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle">3</div>
+                    <div class="step-progress-label">На лифте вниз</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle">4</div>
+                    <div class="step-progress-label">К Spot 15B</div>
+                </div>
+            </div>
+            
+            <div class="navigation-step">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">
+                        <i class="fas fa-route"></i>
+                        Продолжаем к Spot 15B
+                    </div>
+                    <div class="step-instruction">
+                        От стойки информации <span class="highlight">идите прямо 50 метров</span>. Кафе Starbucks будет справа. Это на пути к <span class="spot-ref">вашему Spot 15B</span>.
+                    </div>
+                    
+                    <div class="step-details">
+                        <div class="step-detail">
+                            <i class="fas fa-walking"></i>
+                            <span>50 метров</span>
+                        </div>
+                        <div class="step-detail">
+                            <i class="fas fa-clock"></i>
+                            <span>2-3 минуты</span>
+                        </div>
+                        <div class="step-detail highlight">
+                            <i class="fas fa-car"></i>
+                            <span>Машина ожидает</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="confirm-button" id="confirmStep2Button">
+                    <i class="fas fa-check-circle"></i> Я вижу Starbucks
+                </button>
+            </div>
+            
+            <div class="nav-action-buttons">
+                <button class="secondary-button" id="backStepButton">
+                    <i class="fas fa-arrow-left"></i> Вернуться к шагу 1
+                </button>
+            </div>
+        </div>
+        
+        <!-- Экран 5: Навигация - Шаг 3 (Карта: Starbucks → Лифты) -->
+        <div class="screen nav-screen" id="screen5">
+            <div class="nav-map-container">
+                <div class="nav-map">
+                    <div class="step-map">
+                        <i class="fas fa-coffee step-map-icon"></i>
+                        <div class="step-map-title">Рядом со Starbucks</div>
+                        <div class="step-map-subtitle">Найдите лифты → Спуститесь на 1 этаж</div>
+                        <div style="margin-top: 10px; font-size: 12px; color: #999;">Шаг 3 из 4</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="steps-progress">
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Spot назначен</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Водитель подтвердил</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">К стойке информации</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">До Starbucks</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle active">3</div>
+                    <div class="step-progress-label active">На лифте вниз</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle">4</div>
+                    <div class="step-progress-label">К Spot 15B</div>
+                </div>
+            </div>
+            
+            <div class="navigation-step">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">
+                        <i class="fas fa-elevator"></i>
+                        Спускаемся к Spot 15B
+                    </div>
+                    <div class="step-instruction">
+                        Рядом со Starbucks найдите <span class="highlight">лифты</span>. Спуститесь на <span class="highlight">1 этаж (Level 1)</span>. <span class="spot-ref">Spot 15B</span> находится рядом с выходом D4.
+                    </div>
+                    
+                    <div class="step-details">
+                        <div class="step-detail">
+                            <i class="fas fa-elevator"></i>
+                            <span>Лифты рядом</span>
+                        </div>
+                        <div class="step-detail">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Этаж 2 → 1</span>
+                        </div>
+                        <div class="step-detail highlight">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Рядом с выходом D4</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="confirm-button" id="confirmStep3Button">
+                    <i class="fas fa-check-circle"></i> Я спустился на 1 этаж
+                </button>
+            </div>
+            
+            <div class="nav-action-buttons">
+                <button class="secondary-button" id="backStep2Button">
+                    <i class="fas fa-arrow-left"></i> Вернуться к шагу 2
+                </button>
+            </div>
+        </div>
+        
+        <!-- Экран 6: Навигация - Шаг 4 (Карта: Вы у Spot 15B) -->
+        <div class="screen nav-screen" id="screen6">
+            <div class="spot-confirmation" style="background: #E6F7FF; border-color: #3d5afe;">
+                <div class="spot-confirmation-icon" style="color: #3d5afe;">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <div class="spot-confirmation-text">
+                    <strong>Вы почти у цели!</strong><br>
+                    <strong>Spot 15B</strong> находится в 15 метрах от вас. Водитель Алексей ожидает у белого столба с синей табличкой.
+                </div>
+            </div>
+            
+            <div class="nav-map-container">
+                <div class="nav-map">
+                    <div class="step-map">
+                        <div style="font-size: 48px; margin-bottom: 12px; color: #00CC66; font-weight: bold;">15B</div>
+                        <div class="step-map-title">Вы у Spot 15B</div>
+                        <div class="step-map-subtitle">Белый столб с синей табличкой</div>
+                        <div style="margin-top: 10px; font-size: 12px; color: #999;">Шаг 4 из 4 • Финальный</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="steps-progress">
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Spot назначен</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">Водитель подтвердил</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">К стойке информации</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">До Starbucks</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-progress-label completed">На лифте вниз</div>
+                </div>
+                <div class="step-progress-item">
+                    <div class="step-progress-circle active">4</div>
+                    <div class="step-progress-label active">Вы у Spot 15B</div>
+                </div>
+            </div>
+            
+            <div class="navigation-step">
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Вы у Spot 15B
+                    </div>
+                    <div class="step-instruction">
+                        Вы на месте! <span class="spot-ref">Spot 15B</span> — это белый столб с табличкой "15B". Ваша машина (Kia Rio, белый, А123БВ) припаркована здесь.
+                    </div>
+                    
+                    <div class="step-details">
+                        <div class="step-detail highlight">
+                            <i class="fas fa-car"></i>
+                            <span>Kia Rio • Белый</span>
+                        </div>
+                        <div class="step-detail highlight">
+                            <i class="fas fa-id-card"></i>
+                            <span>А123БВ</span>
+                        </div>
+                        <div class="step-detail highlight">
+                            <i class="fas fa-user-check"></i>
+                            <span>Водитель ждёт</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="confirm-button" id="confirmStep4Button" style="background: linear-gradient(135deg, #3d5afe 0%, #7c4dff 100%);">
+                    <i class="fas fa-camera"></i> AR-поиск машины у Spot 15B
+                </button>
+            </div>
+            
+            <div class="nav-action-buttons">
+                <button class="secondary-button" id="backStep3Button">
+                    <i class="fas fa-arrow-left"></i> Вернуться к шагу 3
+                </button>
+                <button class="secondary-button" id="backToActiveFromNavButton">
+                    <i class="fas fa-home"></i> Вернуться к заказу
+                </button>
+            </div>
+        </div>
+        
+        <!-- Экран 7: AR-поиск машины -->
+        <div class="screen ar-screen" id="screen-ar">
+            <img src="https://www.vnukovo.ru/thumbs/webp/resize/1323x-/uploads/content/Documents/passazhiram/taxi.jpg" alt="Зона такси аэропорта Внуково" class="ar-camera-view" id="arImage">
+            
+            <div class="ar-overlay"></div>
+            
+            <div class="ar-content">
+                <div class="ar-header">
+                    <div class="ar-title">
+                        <i class="fas fa-camera"></i>
+                        AR-поиск машины
+                    </div>
+                    <div class="ar-close" id="arCloseButton">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                
+                <div class="ar-target">
+                    <div class="ar-arrow">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="ar-distance" id="arDistance">5 метров</div>
+                    <div class="ar-instruction">Ваша машина подсвечена зелёным контуром</div>
+                    
+                    <div class="ar-car-highlight" id="carHighlight"></div>
+                </div>
+                
+                <div class="ar-spot-info">
+                    <div class="ar-spot-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Ваша машина у Spot 15B
+                    </div>
+                    <div class="ar-spot-details">
+                        <div class="ar-spot-detail">
+                            <i class="fas fa-car"></i>
+                            <span>Kia Rio • Белый</span>
+                        </div>
+                        <div class="ar-spot-detail">
+                            <i class="fas fa-id-card"></i>
+                            <span>А123БВ</span>
+                        </div>
+                        <div class="ar-spot-detail">
+                            <i class="fas fa-user-check"></i>
+                            <span>Водитель подтвердил</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Экран 8: Завершение навигации (Я сел в машину) -->
+        <div class="screen completion-screen" id="screen-complete">
+            <div class="completion-icon">
+                <i class="fas fa-car-side"></i>
+            </div>
+            
+            <div class="completion-title">Поездка началась!</div>
+            <div class="completion-subtitle">
+                Вы успешно сели в машину.<br>
+                Гарантированная встреча завершена.
+            </div>
+            
+            <div class="completion-details">
+                <div class="completion-detail-row">
+                    <div class="completion-detail-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="completion-detail-content">
+                        <div class="completion-detail-title">Встреча подтверждена</div>
+                        <div class="completion-detail-text">Система зафиксировала вашу встречу с водителем Алексеем у Spot 15B</div>
+                    </div>
+                </div>
+                
+                <div class="completion-detail-row">
+                    <div class="completion-detail-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <div class="completion-detail-content">
+                        <div class="completion-detail-title">Навигация завершена</div>
+                        <div class="completion-detail-text">Вы успешно прошли все 4 шага от багажной ленты до машины</div>
+                    </div>
+                </div>
+                
+                <div class="completion-detail-row">
+                    <div class="completion-detail-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="completion-detail-content">
+                        <div class="completion-detail-title">Гарантия исполнена</div>
+                        <div class="completion-detail-text">Водитель был точно на указанном месте в обещанное время</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="completion-stats">
+                <div class="completion-stats-title">Вы сэкономили время</div>
+                <div class="completion-stats-value">~8 минут</div>
+                <div class="completion-stats-label">по сравнению с обычным поиском такси в аэропорту</div>
+            </div>
+            
+            <div class="order-button-container">
+                <button class="primary-button" id="finishRideButton">
+                    <i class="fas fa-check-circle"></i>
+                    Отлично, поехали!
+                </button>
+                
+                <button class="secondary-button" id="rateDriverButton" style="margin-top: 12px;">
+                    <i class="fas fa-star"></i>
+                    Оценить поездку
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Элементы DOM
+        const screens = {
+            0: document.getElementById('screen0'),          // Главный экран заказа
+            confirm: document.getElementById('screen-confirm'), // Подтверждение заказа
+            active: document.getElementById('screen-active'),   // Активный заказ
+            3: document.getElementById('screen3'),          // Навигация шаг 1
+            4: document.getElementById('screen4'),          // Навигация шаг 2
+            5: document.getElementById('screen5'),          // Навигация шаг 3
+            6: document.getElementById('screen6'),          // Навигация шаг 4
+            ar: document.getElementById('screen-ar'),       // AR экран
+            complete: document.getElementById('screen-complete') // Завершение
+        };
+        
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const arImage = document.getElementById('arImage');
+        const carHighlight = document.getElementById('carHighlight');
+        const arDistance = document.getElementById('arDistance');
+        const orderButton = document.getElementById('orderButton');
+        const confirmTariff = document.getElementById('confirmTariff');
+        const confirmPrice = document.getElementById('confirmPrice');
+        
+        // Переменные состояния
+        let currentScreen = 0;
+        let currentStep = 1;
+        let selectedTariff = 'comfort';
+        let isOrderActive = false;
+        
+        const tariffPrices = {
+            'economy': 589,
+            'comfort': 789,
+            'business': 1189
+        };
+        
+        const tariffNames = {
+            'economy': 'Эконом',
+            'comfort': 'Комфорт',
+            'business': 'Бизнес'
+        };
+        
+        // Основные функции
+        function showScreen(screenNumber) {
+            // Скрыть все экраны
+            Object.values(screens).forEach(screen => {
+                if (screen) screen.classList.remove('active');
+            });
+            
+            // Показать нужный экран
+            if (screens[screenNumber]) {
+                screens[screenNumber].classList.add('active');
+                currentScreen = screenNumber;
+                
+                // Обновить статус
+                updateStatus(screenNumber);
+                
+                // Если это AR экран - позиционируем подсветку машины
+                if (screenNumber === 'ar') {
+                    positionCarHighlight();
+                }
+                
+                // Добавить анимацию (кроме AR экрана)
+                if (screenNumber !== 'ar') {
+                    screens[screenNumber].classList.add('fade-in');
+                    setTimeout(() => {
+                        if (screens[screenNumber]) {
+                            screens[screenNumber].classList.remove('fade-in');
+                        }
+                    }, 300);
+                }
+            }
+        }
+        
+        function updateStatus(screenNumber) {
+            switch(screenNumber) {
+                case 0:
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'Выберите тариф';
+                    break;
+                case 'confirm':
+                    statusDot.className = 'status-dot pending';
+                    statusText.textContent = 'Заказ подтверждён';
+                    break;
+                case 'active':
+                    statusDot.className = 'status-dot pending';
+                    statusText.textContent = 'Водитель едет к вам';
+                    break;
+                case 3:
+                    statusDot.className = 'status-dot active';
+                    statusText.textContent = 'Навигация • Шаг 1 из 4';
+                    break;
+                case 4:
+                    statusDot.className = 'status-dot active';
+                    statusText.textContent = 'Навигация • Шаг 2 из 4';
+                    break;
+                case 5:
+                    statusDot.className = 'status-dot active';
+                    statusText.textContent = 'Навигация • Шаг 3 из 4';
+                    break;
+                case 6:
+                    statusDot.className = 'status-dot active';
+                    statusText.textContent = 'Навигация • Шаг 4 из 4';
+                    break;
+                case 'ar':
+                    statusDot.className = 'status-dot active';
+                    statusText.textContent = 'AR-поиск машины';
+                    break;
+                case 'complete':
+                    statusDot.className = 'status-dot active';
+                    statusText.textContent = 'Поездка началась';
+                    break;
+            }
+        }
+        
+        function positionCarHighlight() {
+            carHighlight.style.top = '62%';
+            carHighlight.style.left = '62%';
+            carHighlight.style.width = '160px';
+            carHighlight.style.height = '70px';
+            carHighlight.style.display = 'block';
+            arDistance.textContent = '5 метров';
+            
+            setTimeout(() => {
+                carHighlight.style.opacity = '1';
+            }, 300);
+        }
+        
+        function updateProgressCircles(completedSteps) {
+            for (let i = 1; i <= 4; i++) {
+                const circle = document.getElementById(`step${i}Circle`);
+                const label = document.getElementById(`step${i}Label`);
+                
+                if (circle && label) {
+                    circle.className = 'step-progress-circle';
+                    circle.innerHTML = i;
+                    label.className = 'step-progress-label';
+                    
+                    if (i < completedSteps) {
+                        circle.className = 'step-progress-circle completed';
+                        circle.innerHTML = '<i class="fas fa-check"></i>';
+                        label.className = 'step-progress-label completed';
+                    } else if (i === completedSteps) {
+                        circle.className = 'step-progress-circle active';
+                        label.className = 'step-progress-label active';
+                    }
+                }
+            }
+            currentStep = completedSteps;
+        }
+        
+        function updateOrderButton() {
+            const price = tariffPrices[selectedTariff];
+            orderButton.innerHTML = `<i class="fas fa-car"></i> Заказать такси за ${price} ₽`;
+        }
+        
+        function updateConfirmationDetails() {
+            const price = tariffPrices[selectedTariff];
+            const tariffName = tariffNames[selectedTariff];
+            
+            confirmTariff.textContent = tariffName;
+            confirmPrice.textContent = `${price} ₽`;
+        }
+        
+        // Инициализация выбора тарифов
+        document.querySelectorAll('.tariff-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.tariff-item').forEach(tariff => {
+                    tariff.classList.remove('active');
+                });
+                
+                this.classList.add('active');
+                selectedTariff = this.dataset.tariff;
+                updateOrderButton();
+            });
+        });
+        
+        // Обработчики событий
+        document.getElementById('orderButton').addEventListener('click', function() {
+            updateConfirmationDetails();
+            showScreen('confirm');
+        });
+        
+        document.getElementById('startNavButton').addEventListener('click', function() {
+            isOrderActive = true;
+            currentStep = 1;
+            updateProgressCircles(1);
+            showScreen(3);
+        });
+        
+        document.getElementById('closeConfirmButton').addEventListener('click', function() {
+            isOrderActive = true;
+            showScreen('active');
+        });
+        
+        document.getElementById('navButtonActive').addEventListener('click', function() {
+            currentStep = 1;
+            updateProgressCircles(1);
+            showScreen(3);
+        });
+        
+        document.getElementById('cancelOrderButton').addEventListener('click', function() {
+            if (confirm('Вы действительно хотите отменить поездку?')) {
+                isOrderActive = false;
+                showScreen(0);
+                alert('Поездка отменена');
+            }
+        });
+        
+        // Навигация
+        document.getElementById('confirmStepButton').addEventListener('click', function() {
+            updateProgressCircles(2);
+            showScreen(4);
+        });
+        
+        document.getElementById('confirmStep2Button').addEventListener('click', function() {
+            updateProgressCircles(3);
+            showScreen(5);
+        });
+        
+        document.getElementById('confirmStep3Button').addEventListener('click', function() {
+            updateProgressCircles(4);
+            showScreen(6);
+        });
+        
+        document.getElementById('confirmStep4Button').addEventListener('click', function() {
+            showScreen('ar');
+        });
+        
+        // AR
+        document.getElementById('arCloseButton').addEventListener('click', function() {
+            showScreen('complete'); // После AR переходим к завершению
+        });
+        
+        // Завершение навигации
+        document.getElementById('finishRideButton').addEventListener('click', function() {
+            alert('Приятной поездки! Спасибо, что выбрали Яндекс Go.');
+            // Сброс состояния
+            isOrderActive = false;
+            showScreen(0);
+        });
+        
+        document.getElementById('rateDriverButton').addEventListener('click', function() {
+            alert('Окно оценки поездки (эмуляция)\n\nВы можете оценить водителя и оставить отзыв о навигации.');
+        });
+        
+        // Кнопки возврата
+        document.getElementById('backToActiveButton').addEventListener('click', function() {
+            showScreen('active');
+        });
+        
+        document.getElementById('backToActiveFromNavButton').addEventListener('click', function() {
+            showScreen('active');
+        });
+        
+        document.getElementById('backStepButton').addEventListener('click', function() {
+            updateProgressCircles(1);
+            showScreen(3);
+        });
+        
+        document.getElementById('backStep2Button').addEventListener('click', function() {
+            updateProgressCircles(2);
+            showScreen(4);
+        });
+        
+        document.getElementById('backStep3Button').addEventListener('click', function() {
+            updateProgressCircles(3);
+            showScreen(5);
+        });
+        
+        // Инициализация
+        showScreen(0);
+        updateOrderButton();
+        
+        // Загрузка AR изображения
+        if (arImage) {
+            arImage.onload = function() {
+                console.log('AR изображение загружено');
+            };
+        }
+    </script>
+</body>
+</html>
